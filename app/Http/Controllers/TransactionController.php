@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 
@@ -32,7 +33,7 @@ class TransactionController extends Controller
     }
 }
 
-// Supprimer un utilisateur
+// Supprimer
     public function destroy($id)
     {
         try{
@@ -46,4 +47,40 @@ class TransactionController extends Controller
         // En cas d'autres erreurs, retourner une réponse JSON avec un message d'erreur général
         return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de la transaction'], 500);
     }
-}}
+}
+
+ public function summary()
+    {
+       
+        $totalTransactions = Transaction::count();
+        $totalAmount = Transaction::sum('total_amount');
+        // $totalAmount = Transaction::sum('price');
+        return response()->json([
+            'total_transactions' => $totalTransactions,
+            'total_amount' => $totalAmount,
+        ]);
+
+        
+    }
+
+    public function transactionsByType()
+    {
+        $transactionsByType = Transaction::select('transaction_name', \DB::raw('count(*) as count'))
+            ->groupBy('transaction_name')
+            ->get();
+
+        return response()->json($transactionsByType);
+    }
+
+    public function totalTransactionsByType()
+    {
+        $totalTransactionsByType = Transaction::select('transaction_name', \DB::raw('sum(total_amount) as total_amount'))
+            ->groupBy('transaction_name')
+            ->get();
+
+        return response()->json($totalTransactionsByType);
+    }
+
+
+
+}

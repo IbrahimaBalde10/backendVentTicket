@@ -64,6 +64,10 @@ Route::middleware('auth:sanctum')->post('/tickets/create', [TicketController::cl
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
      Route::get('/transactions', [TransactionController::class, 'index']);
 // Route::middleware('auth:sanctum')->get('/transactions', [TransactionController::class, 'index']);
+     Route::get('/transactions/summary', [TransactionController::class, 'summary']);
+     Route::get('/transactions/total-by-type', [TransactionController::class, 'totalTransactionsByType']);
+     Route::get('/transactions/by-type', [TransactionController::class, 'transactionsByType']);
+     
      Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
      Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
