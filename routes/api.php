@@ -67,7 +67,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
      Route::get('/transactions/summary', [TransactionController::class, 'summary']);
      Route::get('/transactions/total-by-type', [TransactionController::class, 'totalTransactionsByType']);
      Route::get('/transactions/by-type', [TransactionController::class, 'transactionsByType']);
-     
+        // revenu par jour
+     Route::get('/transactions/revenues-daily', [TransactionController::class, 'getDailyRevenues']);
+
      Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
      Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });

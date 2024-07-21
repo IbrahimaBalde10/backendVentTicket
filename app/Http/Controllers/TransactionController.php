@@ -81,6 +81,15 @@ class TransactionController extends Controller
         return response()->json($totalTransactionsByType);
     }
 
+    public function getDailyRevenues()
+    {
+        $revenues = DB::table('transactions')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_amount) as total_revenue'))
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
 
+        return response()->json($revenues);
+    }
 
 }
