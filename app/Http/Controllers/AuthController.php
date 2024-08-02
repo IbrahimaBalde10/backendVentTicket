@@ -23,19 +23,31 @@ class AuthController extends Controller
                 'telephone' => 'required|string|max:20|unique:users', // Phone number must be a string, not exceed 20 characters and it is required
                 'email' => 'required|string|email|max:255|unique:users', // Email must be a string, a valid email, not exceed 255 characters, it is required and it must be unique in the users table
                 'password' => 'required|string|min:6', // Password must be a string, at least 6 characters and it is required
+                'profile_photo' => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
             ]);
 
 
 
-            // Create new User
-            $user = User::create([
-                'nom' => $request->nom,
-                'prenom' => $request->prenom,
-                'telephone' => $request->telephone,
-                'email' => $request->email,
-                'password' => Hash::make($request->password), // Hash the password
-                'role' => 'Client' // Default role is Client
-            ]);
+             // Create new User
+            $user = new User();
+            $user->nom = $request->nom;
+            $user->prenom = $request->prenom;
+            $user->telephone = $request->telephone;
+            $user->email = $request->email;
+            $user->password = Hash::make($request->password); // Hash the password
+            $user->role = 'Client'; // Default role is Client
+            $user->status = 'active'; // Default status is active
+
+            // Handle profile photo upload
+            if ($request->hasFile('profile_photo')) {
+                $path = $request->file('profile_photo')->store('profile_photos', 'public');
+                $user->profile_photo = $path;
+            }
+
+            // Save the user to the database
+            $user->save();
+
+
 
             // Return user data as JSON with a 201 (created) HTTP status code
             return response()->json(['user' => $user], 201);
@@ -66,16 +78,14 @@ class AuthController extends Controller
                 ['email' => $identifier, 'password' => $request->input('password')] :
                 ['telephone' => $identifier, 'password' => $request->input('password')];
 
-            // Check if the provided credentials are valid
-            // if (!Auth::attempt($request->only('email', 'password'))) {
-            //     // If not, return error message with a 401 (Unauthorized) HTTP status code
-            //     return response()->json(['message' => 'Invalid login details'], 401);
-            // }
 
               if (!Auth::attempt($credentials)) {
             // If not, return error message with a 401 (Unauthorized) HTTP status code
             return response()->json(['message' => 'Invalid login details'], 401);
         }
+         if ($request->user()->status !== 'active') {
+        return response()->json(['error' => 'votre compte n\'est pas activé'], 403);
+    }
 
             // If credentials are valid, get the authenticated user
             $user = $request->user();
@@ -85,6 +95,8 @@ class AuthController extends Controller
 
             // Return user data and token as JSON
             return response()->json(['user' => $user, 'token' => $token]);
+            //  return response()->json(['user' => $user], 201);
+            
         } catch (ValidationException $e) {
             // Return validation errors with a 422 (Unprocessable Entity) HTTP status code
             return response()->json(['errors' => $e->errors()], 422);

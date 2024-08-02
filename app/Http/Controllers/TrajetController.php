@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Trajet; // Trajet model
+use App\Models\DateDeDepart;
+use App\Models\HeureDeDepart;
+
+class TrajetController extends Controller
+{
+     public function index()
+    {
+        // return Trajet::all();
+       return $trajet = Trajet::with('datesDeDepart','heuresDeDepart')->get();
+
+    }
+
+ public function store(Request $request)
+    {
+        $request->validate([
+            'point_depart' => 'required|string|max:255',
+            'point_arrivee' => 'required|string|max:255',
+            'prix' => 'required|numeric',
+            'statut' => 'required|in:actif,inactif',
+            'dates_de_depart' => 'required|array',
+            'dates_de_depart.*' => 'required|date',
+            'heures_de_depart' => 'required|array',
+            'heures_de_depart.*' => 'required|date_format:H:i',
+            'description' => 'nullable|string', // Validation pour la description
+        ]);
+
+        $nom = $request->point_depart . ' --> ' . $request->point_arrivee;
+
+        $existingTrajet = Trajet::where('nom', $nom)->first();
+        if ($existingTrajet) {
+            return response()->json(['message' => 'Ce trajet existe déjà'], 400);
+        }
+
+        $trajet = Trajet::create([
+            'nom' => $nom,
+            'point_depart' => $request->point_depart,
+            'point_arrivee' => $request->point_arrivee,
+            'prix' => $request->prix,
+            'statut' => $request->statut,
+            'description' => $request->description, // Ajout de la description
+        ]);
+
+        if (is_array($request->dates_de_depart)) {
+            foreach ($request->dates_de_depart as $date) {
+                DateDeDepart::create([
+                    'dateDepart' => $date,
+                    'trajet_id' => $trajet->id,
+                ]);
+            }
+        }
+
+        if (is_array($request->heures_de_depart)) {
+            foreach ($request->heures_de_depart as $heure) {
+                HeureDeDepart::create([
+                    'heureDepart' => $heure,
+                    'trajet_id' => $trajet->id,
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Trajet ajouté avec succès', 'trajet' => $trajet], 201);
+    }
+public function show($id)
+    {
+        // Afficher un type de trajet spécifique
+        
+     try{
+        //  $trajet = Trajet::findOrFail($id);
+        $trajet = Trajet::with('datesDeDepart', 'heuresDeDepart')->where('id', $id)->get();
+
+        return response()->json($trajet);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // En cas type de ticket non trouvé, retourner une réponse JSON avec un message d'erreur clair
+        return response()->json(['error' => 'Ce trajet n\'est pas trouvé'], 404);
+    } catch (\Exception $e) {
+        // En cas d'autres erreurs, retourner une réponse JSON avec un message d'erreur général
+        return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails du trajet'], 500);
+    }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+        // Trouver le type de ticket ou échouer
+        $trajet = Trajet::findOrFail($id);
+        $request->validate([
+            'nom' => 'sometimes|required|string|max:255',
+            'point_depart' => 'sometimes|required|string|max:255',
+            'point_arrivee' => 'sometimes|required|string|max:255',
+            'prix' => 'sometimes|required|numeric',
+            'date_depart' => 'sometimes|required|date',
+            'heure_depart' => 'sometimes|required|date_format:H:i',
+            'statut' => 'sometimes|required|in:actif,inactif',
+        ]);
+
+        $trajet->update($request->all());
+
+         return response()->json(['message' => 'trajet modifié avec succe',
+        'trajet'=>$trajet]);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // En cas de ticketType non trouvé, retourner une réponse JSON avec un message d'erreur clair
+        return response()->json(['error' => 'trajet non trouvé'], 404);
+    } catch (\Exception $e) {
+        // En cas d'autres erreurs, retourner une réponse JSON avec le message d'erreur exact
+        return response()->json(['error' => 'Une erreur est survenue lors de la mise à jour du trajet', 
+        'details' => $e->getMessage()], 500);
+    }
+    }
+
+    public function destroy($id)
+    {
+         // Supprimer un trajet
+        try{
+                $trajet = Trajet::findOrFail($id);
+                $trajet->delete();
+                return response()->json(['message' => 'trajet supprimé avec succès']);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // En cas d'utilisateur non trouvé, retourner une réponse JSON avec un message d'erreur clair
+            return response()->json(['error' => 'trajet non trouvé'], 404);
+        } catch (\Exception $e) {
+            // En cas d'autres erreurs, retourner une réponse JSON avec un message d'erreur général
+            return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de trajet'], 500);
+        }
+    }
+    
+}

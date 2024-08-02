@@ -24,7 +24,9 @@ class User extends Authenticatable
         'telephone',
         'email',
         'password',
-        'role'
+        'role',
+        'status',
+        'profile_photo', // Ajouter cette ligne
     ];
 
 

@@ -9,11 +9,36 @@ use App\Models\User; // User model
 class AdminUserController extends Controller
 {
     // Liste tous les utilisateurs
-    public function index()
-    {
-        $users = User::all();
-        return response()->json($users);
-    }
+    // public function index(){
+    //     $users = User::all()->groupBy('id')->orderBy('id', 'asc')->get();
+    //     // $users = User::all();
+    //     return response()->json($users);
+    // }
+public function index(Request $request)
+{
+    $perPage = $request->get('per_page', 2);
+    $users = User::paginate($perPage);
+
+    return response()->json([
+        'data' => $users->items(), // Les utilisateurs pour la page actuelle
+        'meta' => [
+            'current_page' => $users->currentPage(),
+            'from' => $users->firstItem(),
+            'last_page' => $users->lastPage(),
+            'links' => [
+                'first' => $users->url(1),
+                'last' => $users->url($users->lastPage()),
+                'prev' => $users->previousPageUrl(),
+                'next' => $users->nextPageUrl()
+            ],
+            'per_page' => $users->perPage(),
+            'to' => $users->lastItem(),
+            'total' => $users->total()
+        ]
+    ]);
+}
+
+
     public function store(Request $request,)
     {
         try {
@@ -37,7 +62,7 @@ class AdminUserController extends Controller
                 'telephone' => $request->telephone,
                 'email' => $request->email,
                 'password' => Hash::make($request->password), // Hash the password
-                'role' => 'Client' // Default role is Client
+                'role' => $request->role, // Default role is Client
             ]);
 
             // Return user data as JSON with a 201 (created) HTTP status code
@@ -91,8 +116,8 @@ public function show($id)
     // Supprimer un utilisateur
     public function destroy($id)
     {
-        try{
-               $user = User::findOrFail($id);
+    try{
+        $user = User::findOrFail($id);
         $user->delete();
         return response()->json(['message' => 'User deleted successfully']);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -104,4 +129,51 @@ public function show($id)
     }
 
     }
+   
+    // Activer un utilisateur
+    public function activateUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            
+            // Vérifier si l'utilisateur est déjà activé
+            if ($user->status === 'active') {
+                return response()->json(['message' => 'User is already active'], 400);
+            }
+
+            $user->status = 'active';
+            $user->save();
+
+            return response()->json(['message' => 'User activated successfully']);
+        }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // En cas d'utilisateur non trouvé, retourner une réponse JSON avec un message d'erreur clair
+        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+    } catch (\Exception $e) {
+            return response()->json(['message' => 'Error activating user', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Désactiver un utilisateur
+    public function deactivateUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Vérifier si l'utilisateur est déjà désactivé
+            if ($user->status === 'desactive') {
+                return response()->json(['message' => 'User is already desactive'], 400);
+            }
+
+            $user->status = 'desactive';
+            $user->save();
+
+            return response()->json(['message' => 'User deactivated successfully']);
+        }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // En cas d'utilisateur non trouvé, retourner une réponse JSON avec un message d'erreur clair
+        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+    } catch (\Exception $e) {
+            return response()->json(['message' => 'Error deactivating user', 'error' => $e->getMessage()], 500);
+        }
+    }
+
 }

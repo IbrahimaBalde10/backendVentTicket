@@ -16,7 +16,9 @@ return [
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
-    'allowed_origins' => ['http://localhost:5173'], // or your frontend’s URL
+    // 'allowed_origins' => ['http://localhost:5173'], // url de l'app web
+    'allowed_origins' => ['*'], // tout URL est autorisé
+
     'supports_credentials' => true,
 
     // 'paths' => ['api/*', 'sanctum/csrf-cookie'],

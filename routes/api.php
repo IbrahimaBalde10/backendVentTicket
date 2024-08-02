@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminUserController;
 
+use App\Http\Controllers\TrajetController;
 use App\Http\Controllers\TicketTypeController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TransactionController; 
@@ -41,24 +42,43 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/users/{id}', [AdminUserController::class, 'show']);
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+    Route::put('/users/{id}/activate', [AdminUserController::class, 'activateUser']);
+    Route::put('/users/{id}/deactivate', [AdminUserController::class, 'deactivateUser']);
+});
+
+// gestion des trajets par l'admin
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    // Route::apiResource('trajets', TrajetController::class);
+
+    Route::get('/trajets', [TrajetController::class, 'index']);
+    Route::post('/trajets', [TrajetController::class, 'store']);
+    Route::get('/trajets/{id}', [TrajetController::class, 'show']);
+    Route::put('/trajets/{id}', [TrajetController::class, 'update']);
+    Route::delete('/trajets/{id}', [TrajetController::class, 'destroy']);
+    // Route::put('/trajets/{id}/activate', [TrajetController::class, 'activateUser']);
+    // Route::put('/trajets/{id}/deactivate', [TrajetController::class, 'deactivateUser']);
+
 });
 
 // gestion de type de tickets
 // pour tout type d'utilisateur: il peut lister et afficher un type 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/ticketTypes', [TicketTypeController::class, 'index']);
-    Route::get('/ticketTypes/{ticketType}', [TicketTypeController::class, 'show']);
-});
+// Route::middleware(['auth:sanctum'])->group(function () {
+//     Route::get('/ticketTypes', [TicketTypeController::class, 'index']);
+//     Route::get('/ticketTypes/{ticketType}', [TicketTypeController::class, 'show']);
+// });
 
 // Middleware 'admin' appliqué pour gérer les types de tickets
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::post('/ticketTypes', [TicketTypeController::class, 'store']);
-    Route::put('/ticketTypes/{ticketType}', [TicketTypeController::class, 'update']);
-    Route::delete('/ticketTypes/{ticketType}', [TicketTypeController::class, 'destroy']);
-});
+// Route::middleware(['auth:sanctum', 'admin', 'comptable'])->group(function () {
+//     Route::post('/ticketTypes', [TicketTypeController::class, 'store']);
+//     Route::put('/ticketTypes/{ticketType}', [TicketTypeController::class, 'update']);
+//     Route::delete('/ticketTypes/{ticketType}', [TicketTypeController::class, 'destroy']);
+// });
 
-// route pour créer des tickets et transactions concernés
+// route pour créer des tickets et transactions concernés (achat)
 Route::middleware('auth:sanctum')->post('/tickets/create', [TicketController::class, 'create']);
+
+// route pour créer des tickets et transactions concernés (vente)
+Route::middleware('auth:sanctum')->post('/tickets/vendreTicket', [TicketController::class, 'vendreTicket']);
 
 // routes pour gérer les transactions pour les comptables
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
