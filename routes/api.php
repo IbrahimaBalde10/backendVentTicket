@@ -110,7 +110,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 // fin des verifications des erreurs( la suite ...)
 
 // route pour créer des abonnements et transactions concernés
-Route::middleware('auth:sanctum')->post('/subscription/create', [SubscriptionController::class, 'create']);
+Route::middleware('auth:sanctum')->post('/subscriptions/create', [SubscriptionController::class, 'create']);
 
 
 

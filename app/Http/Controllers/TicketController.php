@@ -187,7 +187,7 @@ public function create(Request $request)
         'passengers.*' => 'string',
         'telephone' => 'required|string',
         'nom' => 'required|string',
-        'methodePaiement' =>  'required|in:espece,arte,mobile,en_ligne',
+        'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
         'date_depart' => 'required|date',
         'heure_depart' => 'required|date_format:H:i',
         // 'dates_de_depart' => 'required|array',
@@ -254,7 +254,7 @@ public function create(Request $request)
         $ticket->trajet_id = $request->trajet_id;
         $ticket->type = $type;
         $ticket->date_depart = $request->date_depart;
-        $ticket->heure_depart =  $request->heure_depar;
+        $ticket->heure_depart =  $request->heure_depart;
 
 
         if ($i == 0) {

@@ -31,36 +31,93 @@ class SubscriptionController extends Controller
 
         return response()->json($subscriptions);
     }
-    // Méthode pour créer un abonnement
+
+//     // Méthode pour créer un abonnement
+// public function create(Request $request)
+// {
+//     // Validation des données entrantes
+//     $request->validate([
+//         'subscription_type_id' => 'required|exists:subscription_types,id',
+//         'telephone' => 'required|string',
+//         'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
+//         // Vous pouvez activer la validation des dates si elles sont nécessaires
+//         // 'start_date' => 'required|date',
+//         // 'end_date' => 'required|date|after:start_date',
+//     ]);
+
+//     // Récupérer les informations sur le type d'abonnement
+//     $subscriptionType = SubscriptionType::findOrFail($request->subscription_type_id);
+//     $price = $subscriptionType->price;
+
+//      // Récupérer l'utilisateur authentifié
+//     $user = auth()->user();
+
+//     // Créer une nouvelle transaction pour l'abonnement
+//     $transaction = new Transaction();
+//     $transaction->user_id = auth()->id();
+//     $transaction->total_amount = $price;
+//     $transaction->quantity = 1; // Un abonnement est unique
+//     $transaction->price = $price;
+//     $transaction->transaction_name = 'subscription';
+//     // $transaction->subscription_type_id = $subscriptionType->id;
+//     $transaction->telephoneClient = $user->telephone;
+//     $transaction->methodePaiement = $methodePaiement;
+//     // $transaction->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
+//     $transaction->save();
+
+//     // Créer l'abonnement correspondant
+//     $subscription = new Subscription();
+//     $subscription->user_id = auth()->id();
+//     $subscription->subscription_type_id = $subscriptionType->id;
+//     $subscription->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
+//     $subscription->updateStatut(); // Mettre à jour le statut de l'abonnement
+//     $subscription->save();
+
+//     return response()->json([
+//         'message' => 'Subscription created successfully',
+//         'subscription' => $subscription,
+//         'transaction' => $transaction,
+//         'Abonnement:' => $subscriptionType->name
+//     ]);
+// }
+
 public function create(Request $request)
 {
     // Validation des données entrantes
     $request->validate([
         'subscription_type_id' => 'required|exists:subscription_types,id',
-        // Vous pouvez activer la validation des dates si elles sont nécessaires
-        // 'start_date' => 'required|date',
-        // 'end_date' => 'required|date|after:start_date',
+        'methodePaiement' => 'required|in:espece,carte,mobile,en_ligne',
     ]);
 
     // Récupérer les informations sur le type d'abonnement
     $subscriptionType = SubscriptionType::findOrFail($request->subscription_type_id);
     $price = $subscriptionType->price;
 
+    // Récupérer l'utilisateur authentifié
+    $user = auth()->user();
+
+    // Vérifiez si l'utilisateur est authentifié
+    if (!$user) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
     // Créer une nouvelle transaction pour l'abonnement
     $transaction = new Transaction();
-    $transaction->user_id = auth()->id();
+    $transaction->user_id = $user->id;
     $transaction->total_amount = $price;
     $transaction->quantity = 1; // Un abonnement est unique
     $transaction->price = $price;
     $transaction->transaction_name = 'subscription';
-    $transaction->subscription_type_id = $subscriptionType->id;
-    // $transaction->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
+    $transaction->telephoneClient = $user->telephone;
+    $transaction->methodePaiement = $request->methodePaiement;
     $transaction->save();
 
     // Créer l'abonnement correspondant
     $subscription = new Subscription();
-    $subscription->user_id = auth()->id();
+    $subscription->user_id = $user->id;
     $subscription->subscription_type_id = $subscriptionType->id;
+    $subscription->transaction_id = $transaction->id;
+    $subscription->start_date = now();
     $subscription->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
     $subscription->updateStatut(); // Mettre à jour le statut de l'abonnement
     $subscription->save();
@@ -69,10 +126,9 @@ public function create(Request $request)
         'message' => 'Subscription created successfully',
         'subscription' => $subscription,
         'transaction' => $transaction,
-        'Abonnement:' => $subscriptionType->name
+        'Abonnement' => $subscriptionType->name
     ]);
 }
-
 
 
     // Méthode pour afficher les abonnements d'un utilisateur

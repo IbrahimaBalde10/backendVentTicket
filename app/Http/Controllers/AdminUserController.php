@@ -8,35 +8,45 @@ use App\Models\User; // User model
 
 class AdminUserController extends Controller
 {
-    // Liste tous les utilisateurs
+    // // Liste tous les utilisateurs
     // public function index(){
-    //     $users = User::all()->groupBy('id')->orderBy('id', 'asc')->get();
-    //     // $users = User::all();
+    //     $users = User::all();
     //     return response()->json($users);
     // }
-public function index(Request $request)
-{
-    $perPage = $request->get('per_page', 2);
-    $users = User::paginate($perPage);
 
-    return response()->json([
-        'data' => $users->items(), // Les utilisateurs pour la page actuelle
-        'meta' => [
-            'current_page' => $users->currentPage(),
-            'from' => $users->firstItem(),
-            'last_page' => $users->lastPage(),
-            'links' => [
-                'first' => $users->url(1),
-                'last' => $users->url($users->lastPage()),
-                'prev' => $users->previousPageUrl(),
-                'next' => $users->nextPageUrl()
-            ],
-            'per_page' => $users->perPage(),
-            'to' => $users->lastItem(),
-            'total' => $users->total()
-        ]
-    ]);
+    public function index(Request $request){
+    // Nombre d'éléments par page
+    $perPage = $request->query('perPage', 10); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
+    $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié
+
+    // Récupère les utilisateurs avec pagination
+    $users = User::paginate($perPage, ['*'], 'page', $page);
+
+    return response()->json($users);
 }
+// public function index(Request $request)
+// {
+//     $perPage = $request->get('per_page', 2);
+//     $users = User::paginate($perPage);
+
+//     return response()->json([
+//         'data' => $users->items(), // Les utilisateurs pour la page actuelle
+//         'meta' => [
+//             'current_page' => $users->currentPage(),
+//             'from' => $users->firstItem(),
+//             'last_page' => $users->lastPage(),
+//             'links' => [
+//                 'first' => $users->url(1),
+//                 'last' => $users->url($users->lastPage()),
+//                 'prev' => $users->previousPageUrl(),
+//                 'next' => $users->nextPageUrl()
+//             ],
+//             'per_page' => $users->perPage(),
+//             'to' => $users->lastItem(),
+//             'total' => $users->total()
+//         ]
+//     ]);
+// }
 
 
     public function store(Request $request,)

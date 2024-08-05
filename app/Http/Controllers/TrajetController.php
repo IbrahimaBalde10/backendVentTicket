@@ -9,12 +9,22 @@ use App\Models\HeureDeDepart;
 
 class TrajetController extends Controller
 {
-     public function index()
-    {
-        // return Trajet::all();
-       return $trajet = Trajet::with('datesDeDepart','heuresDeDepart')->get();
+    //  public function index()
+    // {
+    //     return Trajet::all();
+    // //    return $trajet = Trajet::with('datesDeDepart','heuresDeDepart')->get();
 
-    }
+    // }
+    public function index(Request $request){
+    // Nombre d'éléments par page
+    $perPage = $request->query('perPage', 10); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
+    $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié
+
+    // Récupère les utilisateurs avec pagination
+    $trajets = Trajet::paginate($perPage, ['*'], 'page', $page);
+
+    return response()->json($trajets);
+}
 
  public function store(Request $request)
     {
@@ -22,7 +32,7 @@ class TrajetController extends Controller
             'point_depart' => 'required|string|max:255',
             'point_arrivee' => 'required|string|max:255',
             'prix' => 'required|numeric',
-            'statut' => 'required|in:actif,inactif',
+            // 'statut' => 'required|in:actif,inactif',
             'dates_de_depart' => 'required|array',
             'dates_de_depart.*' => 'required|date',
             'heures_de_depart' => 'required|array',
@@ -41,8 +51,8 @@ class TrajetController extends Controller
             'nom' => $nom,
             'point_depart' => $request->point_depart,
             'point_arrivee' => $request->point_arrivee,
-            'prix' => $request->prix,
-            'statut' => $request->statut,
+            'prix' => $request->prix, //  $user->role = 'Client'; // Default role is Client
+            // 'statut' => $request->statut,
             'description' => $request->description, // Ajout de la description
         ]);
 

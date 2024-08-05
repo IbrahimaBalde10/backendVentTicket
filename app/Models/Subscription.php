@@ -17,6 +17,7 @@ class Subscription extends Model
     protected $fillable = [
         'user_id',
         'subscription_type_id',
+        'transaction_id',
         'start_date',
         'end_date',
         'qr_code',
@@ -40,7 +41,7 @@ class Subscription extends Model
             case 'Hebdomadaire':
                 $this->end_date = $this->start_date->copy()->addWeek(); // Ajouter une semaine
                 break;
-            case 'Mensuelle':
+            case 'Mensuel':
                 $this->end_date = $this->start_date->copy()->addMonth(); // Ajouter un mois
                 break;
             case 'Annuelle':

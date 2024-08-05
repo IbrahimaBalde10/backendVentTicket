@@ -20,11 +20,10 @@ public function store(Request $request)
     // Validation des données reçues
     try {
         $request->validate([
-            'name' => 'required|string|in:Hebdomadaire,Mensuelle,Annuelle|max:255',
+            'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:10',
-        ], [
-            'name.in' => 'Le type de subscription doit être "Hebdomadaire, Mensuelle ou Annuelle".',
-            'price.min' => 'Le prix doit être supérieur ou égal à 10.',
+            'description' => 'nullable|string', // Validation pour la description
+
         ]);
 
         // Vérifier si le type existe déjà
@@ -37,6 +36,7 @@ public function store(Request $request)
         $subscriptionType = SubscriptionType::create([
             'name' => $request->name,
             'price' => $request->price,
+            'description' => $request->description, // Ajout de la description
         ]);
 
         return response()->json($subscriptionType, 201);
@@ -75,11 +75,9 @@ public function store(Request $request)
 
         // Validation des données reçues
         $request->validate([
-            'name' => 'required|string|in:Hebdomadaire,Mensuelle,Annuelle|max:255',
+            'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:10',
-        ], [
-            'name.in' => 'Le type de subscription doit être Hebdomadaire, Mensuelle ou Annuelle.',
-            'price.min' => 'Le prix doit être supérieur ou égal à 10.',
+            'description' => 'nullable|string', // Validation pour la description
         ]);
 
         // Vérifier si le nom du type d'abonnement existe déjà (et ne pas autoriser la mise à jour si le nom existe pour un autre type)
@@ -93,6 +91,8 @@ public function store(Request $request)
         $subscriptionType->update([
             'name' => $request->name,
             'price' => $request->price,
+            'description' => $request->description, // Validation pour la description
+
         ]);
 
         return response()->json([
