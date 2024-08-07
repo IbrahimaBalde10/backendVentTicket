@@ -52,7 +52,7 @@ class TrajetController extends Controller
             'point_depart' => $request->point_depart,
             'point_arrivee' => $request->point_arrivee,
             'prix' => $request->prix, //  $user->role = 'Client'; // Default role is Client
-            // 'statut' => $request->statut,
+            'statut' => $request->statut,
             'description' => $request->description, // Ajout de la description
         ]);
 
@@ -76,7 +76,9 @@ class TrajetController extends Controller
 
         return response()->json(['message' => 'Trajet ajouté avec succès', 'trajet' => $trajet], 201);
     }
-public function show($id)
+
+    // affichage
+  public function show($id)
     {
         // Afficher un type de trajet spécifique
         
@@ -95,34 +97,115 @@ public function show($id)
     }
     }
 
-    public function update(Request $request, $id)
-    {
-        try {
-        // Trouver le type de ticket ou échouer
+    // public function update(Request $request, $id)
+    // {
+    //     try {
+    //     // Trouver le type de ticket ou échouer
+    //     $trajet = Trajet::findOrFail($id);
+    //     $request->validate([
+    //         'nom' => 'sometimes|required|string|max:255',
+    //         'point_depart' => 'sometimes|required|string|max:255',
+    //         'point_arrivee' => 'sometimes|required|string|max:255',
+    //         'prix' => 'sometimes|required|numeric',
+    //         'date_depart' => 'sometimes|required|date',
+    //         'heure_depart' => 'sometimes|required|date_format:H:i',
+    //         'statut' => 'sometimes|required|in:actif,inactif',
+    //     ]);
+
+    //     $trajet->update($request->all());
+
+    //      return response()->json(['message' => 'trajet modifié avec succe',
+    //     'trajet'=>$trajet]);
+    // } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+    //     // En cas de ticketType non trouvé, retourner une réponse JSON avec un message d'erreur clair
+    //     return response()->json(['error' => 'trajet non trouvé'], 404);
+    // } catch (\Exception $e) {
+    //     // En cas d'autres erreurs, retourner une réponse JSON avec le message d'erreur exact
+    //     return response()->json(['error' => 'Une erreur est survenue lors de la mise à jour du trajet', 
+    //     'details' => $e->getMessage()], 500);
+    // }
+    // }
+public function update(Request $request, $id)
+{
+    try {
+        // Trouver le trajet ou échouer
         $trajet = Trajet::findOrFail($id);
+
+        // Validation des données
         $request->validate([
-            'nom' => 'sometimes|required|string|max:255',
             'point_depart' => 'sometimes|required|string|max:255',
             'point_arrivee' => 'sometimes|required|string|max:255',
             'prix' => 'sometimes|required|numeric',
-            'date_depart' => 'sometimes|required|date',
-            'heure_depart' => 'sometimes|required|date_format:H:i',
+            // 'dates_de_depart' => 'sometimes|array',
+            // 'dates_de_depart.*' => 'sometimes|required|date',
+            // 'heures_de_depart' => 'sometimes|array',
+            // 'heures_de_depart.*' => 'sometimes|required|date_format:H:i',
             'statut' => 'sometimes|required|in:actif,inactif',
+            'description' => 'nullable|string',
         ]);
 
-        $trajet->update($request->all());
+        // Construire le nom du trajet basé sur les nouvelles informations
+        $nom = $request->point_depart . ' --> ' . $request->point_arrivee;
 
-         return response()->json(['message' => 'trajet modifié avec succe',
-        'trajet'=>$trajet]);
+        // Vérifier si un trajet avec le même nom existe déjà
+        $existingTrajet = Trajet::where('nom', $nom)->where('id', '!=', $id)->first();
+        if ($existingTrajet) {
+            return response()->json(['message' => 'Ce trajet existe déjà'], 400);
+        }
+
+        // Mettre à jour le trajet
+        $trajet->update([
+            'point_depart' => $request->point_depart ?? $trajet->point_depart,
+            'point_arrivee' => $request->point_arrivee ?? $trajet->point_arrivee,
+            'prix' => $request->prix ?? $trajet->prix,
+            'statut' => $request->statut ?? $trajet->statut,
+            'description' => $request->description ?? $trajet->description,
+            'nom' => $nom,
+        ]);
+
+        // // Mettre à jour les dates de départ
+        // if ($request->has('dates_de_depart')) {
+        //     // Supprimer les dates existantes
+        //     $trajet->datesDeDepart()->delete();
+
+        //     // Ajouter les nouvelles dates
+        //     foreach ($request->dates_de_depart as $date) {
+        //         DateDeDepart::create([
+        //             'dateDepart' => $date,
+        //             'trajet_id' => $trajet->id,
+        //         ]);
+        //     }
+        // }
+
+        // // Mettre à jour les heures de départ
+        // if ($request->has('heures_de_depart')) {
+        //     // Supprimer les heures existantes
+        //     $trajet->heuresDeDepart()->delete();
+
+        //     // Ajouter les nouvelles heures
+        //     foreach ($request->heures_de_depart as $heure) {
+        //         HeureDeDepart::create([
+        //             'heureDepart' => $heure,
+        //             'trajet_id' => $trajet->id,
+        //         ]);
+        //     }
+        // }
+
+        return response()->json([
+            'message' => 'Trajet modifié avec succès',
+            'trajet' => $trajet
+        ]);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        // En cas de ticketType non trouvé, retourner une réponse JSON avec un message d'erreur clair
-        return response()->json(['error' => 'trajet non trouvé'], 404);
+        // En cas de trajet non trouvé
+        return response()->json(['error' => 'Trajet non trouvé'], 404);
     } catch (\Exception $e) {
-        // En cas d'autres erreurs, retourner une réponse JSON avec le message d'erreur exact
-        return response()->json(['error' => 'Une erreur est survenue lors de la mise à jour du trajet', 
-        'details' => $e->getMessage()], 500);
+        // En cas d'autres erreurs
+        return response()->json([
+            'error' => 'Une erreur est survenue lors de la mise à jour du trajet',
+            'details' => $e->getMessage()
+        ], 500);
     }
-    }
+}
 
     public function destroy($id)
     {

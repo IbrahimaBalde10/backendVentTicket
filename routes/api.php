@@ -11,6 +11,9 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TransactionController; 
 use App\Http\Controllers\SubscriptionTypeController; 
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\DateDepartController;
+use App\Http\Controllers\HeureDepartController;
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -145,6 +148,26 @@ Route::middleware('auth:sanctum')->post('/subscriptions/check', [SubscriptionCon
 // Reabonner un client 
 Route::middleware('auth:sanctum')->post('/subscriptions/renew', [SubscriptionController::class, 'renewSubscription']);
 
+// routes pour gérer les DateDeDepart 
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+
+     Route::post('/trajets/{trajet_id}/dates', [DateDepartController::class, 'store']);
+     Route::get('/trajets/{trajetId}/dates', [DateDepartController::class, 'index']);
+     Route::get('/trajets/{trajetId}/dates/{dateId}', [DateDepartController::class, 'show']);
+     Route::delete('/trajets/{trajetId}/dates/{dateId}', [DateDepartController::class, 'destroy']);
+     Route::put('/trajets/{trajetId}/dates/{dateId}', [DateDepartController::class, 'update']);
+});
+
+// routes pour gérer les HeureDeDepart 
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+
+    //  Route::post('/trajets/{trajetId}/heures', [HeureDepartController::class, 'store']);
+     Route::post('/trajets/heures', [HeureDepartController::class, 'store']);
+     Route::get('/trajets/{trajetId}/heures', [HeureDepartController::class, 'index']);
+     Route::get('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'show']);
+     Route::delete('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'destroy']);
+     Route::put('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'update']);
+});
 
 // test qrCode
 // use App\Http\Controllers\QRcodeGenerateController;
