@@ -24,11 +24,22 @@ class Transaction extends Model
         
     ];
 
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
+    
+    // Relation avec l'utilisateur correspondant à user_id
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Relation avec l'utilisateur correspondant à telephoneClient
+    public function client()
+    {
+        return $this->belongsTo(User::class, 'telephoneClient', 'telephone');
+    }
     public function tickets()
     {
         return $this->hasMany(Ticket::class);

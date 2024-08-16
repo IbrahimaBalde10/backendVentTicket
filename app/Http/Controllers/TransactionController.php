@@ -9,19 +9,39 @@ use App\Models\Transaction;
 class TransactionController extends Controller
 {
     // Méthode pour lister les transactions de l'utilisateur
-    public function index()
-    {
-        // $transactions = auth()->transaction()->transactions;
+    // public function index()
+    // {
     
-        $transactions = Transaction::all();
-        return response()->json($transactions);
-    }
+    //     $transactions = Transaction::all();
+    //     return response()->json($transactions);
+    // }
+        // public function index(Request $request)
+        // {
+        //     $perPage = $request->input('perPage', 4);
+        //     $page = $request->input('page', 1);
+
+        //     $transactions = Transaction::paginate($perPage, ['*'], 'page', $page);
+        //     return response()->json($transactions);
+        // }
+
+        public function index(Request $request)
+        {
+            $perPage = $request->input('perPage', 4);
+            $page = $request->input('page', 1);
+
+            $transactions = Transaction::with(['user', 'client'])
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json($transactions);
+        }
+
+
 
     // Méthode pour afficher les détails d'une transaction spécifique
     public function show($id)
     {
        try{
-         $transaction = Transaction::findOrFail($id);
+         $transaction = Transaction::with(['user', 'client'])->findOrFail($id);
         return response()->json($transaction);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

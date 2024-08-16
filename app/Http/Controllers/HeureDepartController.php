@@ -35,21 +35,43 @@ class HeureDepartController extends Controller
     }
 }
 
- public function store(Request $request)
-    {
-        $request->validate([
-            'trajet_id' => 'required|exists:trajets,id',
-            'heureDepart.*' => 'required|date_format:H:i',
+//  public function store(Request $request)
+//     {
+//         $request->validate([
+//             'trajet_id' => 'required|exists:trajets,id',
+//             'heureDepart.*' => 'required|date_format:H:i',
             
-        ]);
+//         ]);
 
-        $heureDepart = HeureDeDepart::create([
-            'trajet_id' => $request->trajet_id,
-            'heureDepart' => $request->heureDepart,
-            ]);
+//         $heureDepart = HeureDeDepart::create([
+//             'trajet_id' => $request->trajet_id,
+//             'heureDepart' => $request->heureDepart,
+//             ]);
 
-        return response()->json(['message' => 'Heure ajouté avec succès', 'date' => $heureDepart], 201);
+//         return response()->json(['message' => 'Heure ajouté avec succès', 'date' => $heureDepart], 201);
+//     }
+
+public function store(Request $request, $trajet_id)
+{
+    // Valider la présence de trajet_id dans l'URL
+    $request->validate([
+        'heureDepart.*' => 'required|te_format:H:i',
+    ]);
+
+    // Vérifier l'existence du trajet
+    $trajet = Trajet::find($trajet_id);
+    if (!$trajet) {
+        return response()->json(['message' => 'Trajet non trouvé'], 404);
     }
+
+    // Créer la nouvelle heure de départ
+    $heureDepart = HeureDeDepart::create([
+        'trajet_id' => $trajet_id,
+        'heureDepart' => $request->heureDepart,
+    ]);
+
+    return response()->json(['message' => 'Heure ajoutée avec succès', 'heure' => $heureDepart], 201);
+}
 
     // affichage
  public function show($trajetId, $heureId)

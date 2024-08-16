@@ -13,7 +13,7 @@ use App\Http\Controllers\SubscriptionTypeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DateDepartController;
 use App\Http\Controllers\HeureDepartController;
-
+use App\Http\Controllers\rechercheController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->post('/subscriptions/create', [SubscriptionCo
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // afficher les tickets
     Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/{id}', [TicketController::class, 'show']);
     // route pour editer un ticket (test seulement pour le statut)
     Route::put('/tickets/{id}', [TicketController::class, 'updateTicket']);
     Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
@@ -162,12 +163,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     //  Route::post('/trajets/{trajetId}/heures', [HeureDepartController::class, 'store']);
-     Route::post('/trajets/heures', [HeureDepartController::class, 'store']);
+     Route::post('/trajets/{trajet_id}/heures', [HeureDepartController::class, 'store']);
      Route::get('/trajets/{trajetId}/heures', [HeureDepartController::class, 'index']);
      Route::get('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'show']);
      Route::delete('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'destroy']);
      Route::put('/trajets/{trajetId}/heures/{heureId}', [HeureDepartController::class, 'update']);
 });
+
+Route::middleware('auth:sanctum')->get('/search', [rechercheController::class, 'search']);
 
 // test qrCode
 // use App\Http\Controllers\QRcodeGenerateController;

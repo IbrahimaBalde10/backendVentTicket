@@ -7,28 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 use App\Models\Transaction; // Transaction model
-use App\Models\TicketType; // TicketType model
+// use App\Models\TicketType; // TicketType model
 
 
 class Ticket extends Model
 {
     use HasFactory;
 
-     public function type()
-    {
-        return $this->belongsTo(TicketType::class, 'ticket_type_id');
-    }
-    
-    // protected $fillable = [
-    //     'transaction_id', 
-    //     'ticket_type_id',  
-    //     'qr_code',
-    //     'statut',
-    //     'purchase_date',
-    //     'expiration_date',
-    //     'created_at',
-    //     'updated_at',
-    // ];
+    //  public function type()
+    // {
+    //     return $this->belongsTo(TicketType::class, 'ticket_type_id');
+    // }
+
 
     // Indique les attributs qui peuvent être assignés en masse
     protected $fillable = [
@@ -47,11 +37,16 @@ class Ticket extends Model
 
     // 
  // Relation avec le modèle User
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
+
+    // Relation avec l'utilisateur correspondant à user_id
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
-
     // Relation avec le modèle Trajet
     public function trajet()
     {
@@ -64,6 +59,7 @@ class Ticket extends Model
         return $this->belongsTo(Transaction::class);
     }
 
+    
     // 
 
     protected $dates = [
@@ -104,7 +100,7 @@ public function getRemainingTimeAttribute()
             $expirationDate = Carbon::parse($this->expiration_date);
             if ($expirationDate->greaterThan($now)) {
                 // return $expirationDate->diffForHumans($now, true);
-
+                
                 return response()->json(['Il vous reste: ' => $expirationDate->diffForHumans($now, true) ]);
             }
         }
