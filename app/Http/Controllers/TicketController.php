@@ -83,10 +83,7 @@ public function create(Request $request)
             'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
             'date_depart' => 'required|date',
             'heure_depart' => 'required|date_format:H:i',
-            // 'dates_de_depart' => 'required|array',
-            // 'dates_de_depart.*' => 'required|date',
-            // 'heures_de_depart' => 'required|array',
-            // 'heures_de_depart.*' => 'required|date_format:H:i',
+    
         ]);
 
         // Récupération des informations sur le trajet et calcul du prix

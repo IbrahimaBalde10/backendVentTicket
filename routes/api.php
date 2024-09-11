@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 });
 
 // gestion des trajets par l'admin
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // Route::apiResource('trajets', TrajetController::class);
 
     Route::get('/trajets', [TrajetController::class, 'index']);
@@ -82,6 +82,9 @@ Route::middleware('auth:sanctum')->post('/tickets/create', [TicketController::cl
 
 // route pour créer des tickets et transactions concernés (vente)
 Route::middleware('auth:sanctum')->post('/tickets/vendreTicket', [TicketController::class, 'vendreTicket']);
+
+// verifier les transactions de user connecte
+Route::middleware('auth:sanctum')->get('/transactions/maConso', [TransactionController::class, 'checkUserTransactions']);
 
 // routes pour gérer les transactions pour les comptables
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -143,11 +146,18 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 // verifier le statut d'abonnement du client connecté
 Route::middleware('auth:sanctum')->get('/subscriptions/status', [SubscriptionController::class, 'checkSubscriptionStatus']);
 
+
+
+// // verifier le statut d'abonnement du client via son num Te
+// Route::middleware('auth:sanctum')->post('/subscriptions/verifierAbonnementClient', [SubscriptionController::class, 'verifierAbonnementClient']);
+
+// Route::middleware('auth:sanctum')->post('/subscriptions/check', [SubscriptionController::class, 'checkSubscriptionStatusTel']);
+
 // verifier le statut d'abonnement du client via son num Te
-Route::middleware('auth:sanctum')->post('/subscriptions/check', [SubscriptionController::class, 'checkSubscriptionStatusTel']);
+Route::middleware('auth:sanctum')->post('/subscriptions/verifierAbonnementClient', [SubscriptionController::class, 'verifierAbonnementClient']);
 
 // Reabonner un client 
-Route::middleware('auth:sanctum')->post('/subscriptions/renew', [SubscriptionController::class, 'renewSubscription']);
+Route::middleware('auth:sanctum')->post('/subscriptions/renouvelerAbonnementClient', [SubscriptionController::class, 'renouvelerAbonnementClient']);
 
 // routes pour gérer les DateDeDepart 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {

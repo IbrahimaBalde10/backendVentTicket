@@ -8,10 +8,21 @@ use App\Models\SubscriptionType; // SubscriptionType model
 class SubscriptionTypeController extends Controller
 {
     
-   public function index()
-{
-    // Récupérer tous les types de subscriptions
-    $subscriptionTypes = SubscriptionType::all();
+//    public function index()
+// {
+//     // Récupérer tous les types de subscriptions
+//     $subscriptionTypes = SubscriptionType::all();
+//     return response()->json($subscriptionTypes);
+// }
+
+ public function index(Request $request){
+    // Nombre d'éléments par page
+    $perPage = $request->query('perPage', 5); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
+    $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié
+
+    // Récupère les utilisateurs avec pagination
+    $subscriptionTypes = SubscriptionType::paginate($perPage, ['*'], 'page', $page);
+
     return response()->json($subscriptionTypes);
 }
 

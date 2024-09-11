@@ -11,17 +11,32 @@ class TrajetController extends Controller
 {
     //  public function index()
     // {
-    //     return Trajet::all();
-    // //    return $trajet = Trajet::with('datesDeDepart','heuresDeDepart')->get();
+    //     // return Trajet::all();
+    //      $trajets = Trajet::with('datesDeDepart', 'heuresDeDepart')->get();
+
+    //     return response()->json($trajets);
+    // //    return $trajets = Trajet::with('datesDeDepart','heuresDeDepart')->get();
 
     // }
-    public function index(Request $request){
+
+//     public function index(Request $request){
+//     // Nombre d'éléments par page
+//     $perPage = $request->query('perPage', 10); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
+//     $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié
+
+//     // Récupère les utilisateurs avec pagination
+//     $trajets = Trajet::paginate($perPage, ['*'], 'page', $page);
+
+//     return response()->json($trajets);
+// }
+public function index(Request $request) {
     // Nombre d'éléments par page
     $perPage = $request->query('perPage', 10); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
     $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié
 
-    // Récupère les utilisateurs avec pagination
-    $trajets = Trajet::paginate($perPage, ['*'], 'page', $page);
+    // Récupère les trajets avec les relations datesDeDepart et heuresDeDepart, paginés
+    $trajets = Trajet::with('datesDeDepart', 'heuresDeDepart')
+        ->paginate($perPage, ['*'], 'page', $page);
 
     return response()->json($trajets);
 }

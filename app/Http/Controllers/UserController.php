@@ -21,42 +21,79 @@ class UserController extends Controller
     
     // Méthode pour mettre à jour les informations de l'utilisateur connecté
     public function updateProfile(Request $request)
-    {
-        // Validation des champs de la requête entrante
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . auth()->id(),
-            'telephone' => 'required|string|max:20',
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
+{
+    $request->validate([
+        'nom' => 'required|string|max:255',
+        'prenom' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . auth()->id(),
+        'telephone' => 'required|string|max:20',
+        'password' => 'nullable|string|min:6|confirmed',
+    ]);
 
-        // Récupérer l'utilisateur authentifié
-        $user = auth()->user();
+    $user = auth()->user();
 
-        try {
-            // Mettre à jour les informations de l'utilisateur
+    try {
         $user->nom = $request->nom;
         $user->prenom = $request->prenom;
         $user->email = $request->email;
         $user->telephone = $request->telephone;
 
-        // Vérifier et mettre à jour le mot de passe si spécifié
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
-        // Sauvegarder les modifications
         $user->save();
-        
-        // Retourner une réponse JSON avec un message de succès
-        return response()->json(['message' => 'User profile updated successfully']);
 
-        } catch (\Throwable $e) {
-            return response()->json(['error' => 'Erreur',
-        'error' => $e->getMessage()], 404);
-        }
+        // Retourner l'utilisateur mis à jour
+        return response()->json([
+            'message' => 'User profile updated successfully',
+            'user' => $user // Inclure l'utilisateur mis à jour
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => 'Erreur',
+            'message' => $e->getMessage()
+        ], 404);
     }
+}
+
+    // public function updateProfile(Request $request)
+    // {
+    //     // Validation des champs de la requête entrante
+    //     $request->validate([
+    //         'nom' => 'required|string|max:255',
+    //         'prenom' => 'required|string|max:255',
+    //         'email' => 'required|string|email|max:255|unique:users,email,' . auth()->id(),
+    //         'telephone' => 'required|string|max:20',
+    //         'password' => 'nullable|string|min:6|confirmed',
+    //     ]);
+
+    //     // Récupérer l'utilisateur authentifié
+    //     $user = auth()->user();
+
+    //     try {
+    //         // Mettre à jour les informations de l'utilisateur
+    //     $user->nom = $request->nom;
+    //     $user->prenom = $request->prenom;
+    //     $user->email = $request->email;
+    //     $user->telephone = $request->telephone;
+
+    //     // Vérifier et mettre à jour le mot de passe si spécifié
+    //     if ($request->filled('password')) {
+    //         $user->password = Hash::make($request->password);
+    //     }
+
+    //     // Sauvegarder les modifications
+    //     $user->save();
+        
+    //     // Retourner une réponse JSON avec un message de succès
+    //     return response()->json(['message' => 'User profile updated successfully']);
+
+    //     } catch (\Throwable $e) {
+    //         return response()->json(['error' => 'Erreur',
+    //     'error' => $e->getMessage()], 404);
+    //     }
+    // }
 
     
 }

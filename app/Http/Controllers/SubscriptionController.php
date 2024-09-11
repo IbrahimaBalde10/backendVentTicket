@@ -81,6 +81,7 @@ class SubscriptionController extends Controller
 //     ]);
 // }
 
+//abonnement dun client 
 public function create(Request $request)
 {
     // Validation des données entrantes
@@ -98,7 +99,7 @@ public function create(Request $request)
 
     // Vérifiez si l'utilisateur est authentifié
     if (!$user) {
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return response()->json(['error' => 'Vous devez vous connecté!!!'], 401);
     }
 
     // Créer une nouvelle transaction pour l'abonnement
@@ -220,107 +221,281 @@ public function create(Request $request)
     }
 
 // methode permettant aux abonnées de verifier le statut de leur abonnement
+// public function checkSubscriptionStatus(Request $request)
+// {
+//     $user = auth()->user();
+
+//     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
+
+//     if ($subscription) {
+//         $subscription->updateStatut(); // Mettez à jour le statut avant de renvoyer la réponse
+//         return response()->json([
+//             'status' => $subscription->statut,
+//             'end_date' => $subscription->end_date,
+//             'Abonnement:' => $subscription->subscription_type_id
+//         ]);
+//     }
+
+//     return response()->json([
+//         'message' => 'No subscription found'
+//     ], 404);
+// }
+
+// public function checkSubscriptionStatus(Request $request)
+// {
+//     $user = auth()->user();
+
+//     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
+
+//     if ($subscription) {
+//         $subscription->updateStatut(); // Mettez à jour le statut avant de renvoyer la réponse
+//         return response()->json([
+//             'status' => $subscription->statut,
+//             'end_date' => $subscription->end_date,
+//             'idType' => $subscription->subscription_type_id,
+//             'nomType' => $subscription->subscriptionType ? $subscription->subscriptionType->name : 'Unknown',
+//             'qr_code' => $subscription->qr_code,
+//         ]);
+//     }
+
+//     return response()->json([
+//         'message' => 'No subscription found'
+//     ], 404);
+// }
+
 public function checkSubscriptionStatus(Request $request)
 {
+    // Récupérer l'utilisateur authentifié
     $user = auth()->user();
 
+    // Chercher un abonnement pour cet utilisateur
     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
 
+    // Si un abonnement existe
     if ($subscription) {
-        $subscription->updateStatut(); // Mettez à jour le statut avant de renvoyer la réponse
+        // Mettre à jour le statut en fonction de la date de fin
+        $subscription->updateStatut();
+
         return response()->json([
+            'has_subscription' => true,
             'status' => $subscription->statut,
             'end_date' => $subscription->end_date,
-            // 'status' => $subscription->su
-            'Abonnement:' => $subscription->subscription_type_id
+            'idType' => $subscription->subscription_type_id,
+            'nomType' => $subscription->subscriptionType ? $subscription->subscriptionType->name : 'Unknown',
+            'qr_code' => $subscription->qr_code,
         ]);
     }
 
+    // Si aucun abonnement n'existe
     return response()->json([
-        'message' => 'No subscription found'
-    ], 404);
+        'has_subscription' => false,
+        'message' => 'Vous n \'avez pas d\'abonnement.'
+    ]);
 }
 
-// verifier le satut de l'abonnement du client via son num telephone
-public function checkSubscriptionStatusTel(Request $request)
-{
-    $request->validate([
-        'telephone' => 'required',
-    ]);
+// // verifier le satut de l'abonnement du client via son num telephone
+// public function checkSubscriptionStatusTel(Request $request)
+// {
+//     $request->validate([
+//         'telephone' => 'required',
+//     ]);
 
-    $user = User::where('telephone', $request->telephone)->first();
+//     $user = User::where('telephone', $request->telephone)->first();
+
+//     if (!$user) {
+//         return response()->json([
+//             'message' => 'User not found'
+//         ], 404);
+//     }
+
+//     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
+
+//     if ($subscription) {
+//         $subscription->updateStatut(); // Mettez à jour le statut avant de renvoyer la réponse
+//         return response()->json([
+//             'status' => $subscription->statut,
+//             'end_date' => $subscription->end_date
+//         ]);
+//     }
+
+//     return response()->json([
+//         'message' => 'No subscription found'
+//     ], 404);
+// }
+
+// //Reabonner un client via son Tel et type d'abonnement indique
+// public function renewSubscription(Request $request)
+// {
+//     $request->validate([
+//         'telephone' => 'required',
+//         'subscription_type_id' => 'required|exists:subscription_types,id'
+//     ]);
+
+//     $user = User::where('telephone', $request->telephone)->first();
+
+//     if (!$user) {
+//         return response()->json([
+//             'message' => 'Cet utilisateur n\'existe pas'
+//         ], 404);
+//     }
+
+//     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
+
+//     if ($subscription && $subscription->statut == 'valide') {
+//         return response()->json([
+//             'message' => 'Subscription is still valid',
+//             'end_date' => $subscription->end_date
+//         ]);
+//     }
+
+//     // Créer une nouvelle transaction pour le réabonnement
+//     $subscriptionType = SubscriptionType::findOrFail($request->subscription_type_id);
+//     $price = $subscriptionType->price;
+
+//     $transaction = new Transaction();
+//     $transaction->user_id = $user->id;
+//     $transaction->total_amount = $price;
+//     $transaction->quantity = 1;
+//     $transaction->price = $price;
+//     $transaction->transaction_name = 'subscription';
+//     $transaction->save();
+
+//     // Créer le réabonnement
+//     $newSubscription = new Subscription();
+//     $newSubscription->user_id = $user->id;
+//     $newSubscription->subscription_type_id = $subscriptionType->id;
+//     $newSubscription->calculateEndDate($subscriptionType->name);
+//     $newSubscription->updateStatut();
+//     $newSubscription->save();
+
+//     return response()->json([
+//         'message' => 'Subscription renewed successfully',
+//         'subscription' => $newSubscription
+//     ]);
+// }
+
+
+// verifier labonnement 
+public function verifierAbonnementClient(Request $request)
+{
+    // Récupérer l'utilisateur authentifié
+    $user = $request->user(); // Utilisateur authentifié avec Sanctum
 
     if (!$user) {
         return response()->json([
-            'message' => 'User not found'
+            'message' => 'Utilisateur non authentifié.'
+        ], 401);
+    }
+
+    // Valider le téléphone
+    $request->validate([
+        'telephone' => 'required',
+    ], [
+        'telephone.required' => 'Le numéro de téléphone est requis.',
+    ]);
+
+    // Vérifier si l'utilisateur existe via son numéro de téléphone
+    $user = User::where('telephone', $request->telephone)->first();
+    if (!$user) {
+        return response()->json([
+            'message' => 'Cet utilisateur n\'existe pas.'
         ], 404);
     }
 
+    // Vérifier si l'utilisateur a un abonnement
     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
-
     if ($subscription) {
-        $subscription->updateStatut(); // Mettez à jour le statut avant de renvoyer la réponse
+        // Vérifier l'état de l'abonnement
+        if ($subscription->statut == 'valide') {
+            return response()->json([
+                'message' => 'Son abonnement est encore valide.',
+                'subscription_type' => $subscription->subscriptionType->name,
+                'end_date' => $subscription->end_date,
+            ]);
+        } else {
+            // Retourner une réponse indiquant que l'abonnement est expiré
+            return response()->json([
+                'message' => 'Abonnement expiré.',
+                'subscription_id' => $subscription->id, // Facultatif, si besoin
+                'subscription_type' => $subscription->subscriptionType->name,
+                'end_date' => $subscription->end_date,
+            ], 200);
+        }
+    } else {
         return response()->json([
-            'status' => $subscription->statut,
-            'end_date' => $subscription->end_date
-        ]);
+            'message' => 'Cet utilisateur n\'a pas d\'abonnement existant.'
+        ], 404);
     }
-
-    return response()->json([
-        'message' => 'No subscription found'
-    ], 404);
 }
 
-//Reabonner un client via son Tel et type d'abonnement indique
-public function renewSubscription(Request $request)
+
+// reabonner un client via  dabonnement indique
+public function renouvelerAbonnementClient(Request $request)
 {
+    // Valider les données nécessaires pour le renouvellement
     $request->validate([
         'telephone' => 'required',
-        'subscription_type_id' => 'required|exists:subscription_types,id'
+        'subscription_type_id' => 'required|exists:subscription_types,id',
+        'methodePaiement' => 'required',
+    ], [
+        'telephone.required' => 'Le numéro de téléphone est requis.',
+        'subscription_type_id.required' => 'Le type d\'abonnement est requis.',
+        'subscription_type_id.exists' => 'Le type d\'abonnement sélectionné n\'existe pas.',
+        'methodePaiement.required' => 'La méthode de paiement est requise.',
     ]);
 
+    // Vérifier si l'utilisateur existe
     $user = User::where('telephone', $request->telephone)->first();
-
     if (!$user) {
         return response()->json([
-            'message' => 'User not found'
+            'message' => 'Cet utilisateur n\'existe pas.'
         ], 404);
     }
 
+    // Vérifier si l'utilisateur a un abonnement expiré
     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
-
-    if ($subscription && $subscription->statut == 'valide') {
+    if (!$subscription || $subscription->statut == 'valide') {
         return response()->json([
-            'message' => 'Subscription is still valid',
-            'end_date' => $subscription->end_date
-        ]);
+            'message' => 'L\'abonnement est encore valide ou n\'existe pas.',
+            'subscription_type' => $subscription->subscriptionType->name,
+                'end_date' => $subscription->end_date,
+        ], 400);
     }
 
-    // Créer une nouvelle transaction pour le réabonnement
-    $subscriptionType = SubscriptionType::findOrFail($request->subscription_type_id);
-    $price = $subscriptionType->price;
+    // Vérifier si le type d'abonnement existe
+    $subscriptionType = SubscriptionType::find($request->subscription_type_id);
 
+    // Créer une nouvelle transaction pour le renouvellement
+    $price = $subscriptionType->price;
     $transaction = new Transaction();
     $transaction->user_id = $user->id;
     $transaction->total_amount = $price;
     $transaction->quantity = 1;
     $transaction->price = $price;
     $transaction->transaction_name = 'subscription';
+    $transaction->telephoneClient = $user->telephone;
+    $transaction->methodePaiement = $request->methodePaiement;
     $transaction->save();
 
-    // Créer le réabonnement
+    // Créer le nouvel abonnement
     $newSubscription = new Subscription();
     $newSubscription->user_id = $user->id;
     $newSubscription->subscription_type_id = $subscriptionType->id;
+    $newSubscription->transaction_id = $transaction->id;
+    $newSubscription->start_date = now();
     $newSubscription->calculateEndDate($subscriptionType->name);
     $newSubscription->updateStatut();
     $newSubscription->save();
 
+    // Retourner les détails du nouvel abonnement
     return response()->json([
-        'message' => 'Subscription renewed successfully',
-        'subscription' => $newSubscription
+        'message' => 'Abonnement renouvelé avec succès.',
+        'subscription_type' => $newSubscription->subscriptionType->name,
+        'end_date' => $newSubscription->end_date,
     ]);
 }
+
+
 
 
 // Méthode pour obtenir le nombre de subscriptions par type
