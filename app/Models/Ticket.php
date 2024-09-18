@@ -60,20 +60,20 @@ class Ticket extends Model
     }
 
     
-    // 
+
 
     protected $dates = [
         'purchase_date',
         'expiration_date',
     ];
- public function calculateExpirationDate($type)
+  public function calculateExpirationDate($type)
     {
         $this->purchase_date = Carbon::now();
 
-        if ($type == 'Aller simple') {
-            $this->expiration_date = $this->purchase_date->copy()->addHour(2);
-        } elseif ($type == 'Aller retour') {
-            $this->expiration_date = $this->purchase_date->copy()->addHours(5);
+        if ($type == 'aller_simple') {
+            $this->expiration_date = $this->purchase_date->copy()->addHour(3);
+        } elseif ($type == 'aller_retour') {
+            $this->expiration_date = $this->purchase_date->copy()->addHours(10);
         }
 
         $this->save();
@@ -92,7 +92,7 @@ class Ticket extends Model
         $this->save();
     }
 
-public function getRemainingTimeAttribute()
+    public function getRemainingTimeAttribute()
     {
         $now = Carbon::now();
 

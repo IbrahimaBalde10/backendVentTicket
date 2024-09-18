@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('subscription_types', function (Blueprint $table) {
             $table->id();
-            // $table->string('name');
             $table->string('name');
             $table->decimal('price', 8, 2); // Prix d'abonement
             $table->text('description')->nullable(); //colonne ajouté

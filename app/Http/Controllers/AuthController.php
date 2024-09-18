@@ -19,7 +19,7 @@ class AuthController extends Controller
             // Validate incoming request fields
             $request->validate([
                 'nom' => 'required|string|max:255', // Name must be a string, not exceed 255 characters and it is required
-                'prenom' => 'required|string|max:255', // Last name must be a string, not exceed 255 characters and it is required
+                'prenom' => '|string|max:255', // Last name must be a string, not exceed 255 characters and it is required
                 'telephone' => 'required|string|max:20|unique:users', // Phone number must be a string, not exceed 20 characters and it is required
                 'email' => 'required|string|email|max:255|unique:users', // Email must be a string, a valid email, not exceed 255 characters, it is required and it must be unique in the users table
                 'password' => 'required|string|min:6', // Password must be a string, at least 6 characters and it is required

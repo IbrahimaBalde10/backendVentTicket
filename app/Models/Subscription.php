@@ -56,38 +56,37 @@ class Subscription extends Model
         $this->save();
     }
 
+//     public function updateStatut()
+// {
+//     $now = Carbon::now();
 
-    //  // Méthode pour mettre à jour le statut de l'abonnement
-    // public function updateStatut()
-    // {
-    //     $now = Carbon::now();
+//     // Assurez-vous que end_date est bien une instance de Carbon
+//     $endDate = Carbon::parse($this->end_date);
 
-    //     if ($this->end_date && $now->greaterThanOrEqualTo($this->end_date)) {
-    //         $this->statut = 'expire';
-    //     } else {
-    //         $this->statut = 'valide';
-    //     }
+//     // Mettre à jour le statut en fonction de la date de fin
+//     if ($endDate->lessThanOrEqualTo($now)) {
+//         $this->statut = 'expire';
+//     } else {
+//         $this->statut = 'valide';
+//     }
 
-    //     $this->save();
-    // }
-    public function updateStatut()
-{
-    $now = Carbon::now();
+//     // Sauvegarder les modifications
+//     $this->save();
+// }
+// 
+ public function updateStatut()
+    {
+        $now = Carbon::now();
 
-    // Assurez-vous que end_date est bien une instance de Carbon
-    $endDate = Carbon::parse($this->end_date);
+        if ($this->end_date && $now->greaterThanOrEqualTo($this->end_date)) {
+            $this->statut = 'expire';
+        } else {
+            $this->statut= 'valide';
+        }
 
-    // Mettre à jour le statut en fonction de la date de fin
-    if ($endDate->lessThanOrEqualTo($now)) {
-        $this->statut = 'expire';
-    } else {
-        $this->statut = 'valide';
+        $this->save();
     }
-
-    // Sauvegarder les modifications
-    $this->save();
-}
-
+    // 
     public function user()
     {
         return $this->belongsTo(User::class);

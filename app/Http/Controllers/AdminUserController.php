@@ -9,12 +9,25 @@ use App\Models\User; // User model
 class AdminUserController extends Controller
 {
     // // Liste tous les utilisateurs
-    // public function index(){
-    //     $users = User::all();
-    //     return response()->json($users);
-    // }
+// public function index(Request $request){
+//     // 
+//     $sorBy = $request->get('sorBy', 'created_at');
+//     $sortOrder = $request->get('sorOrder', 'desc');
 
-    public function index(Request $request){
+//     $users = User::orderBy($sorBy, $sortOrder)
+//                 ->paginate($request->get('perPage', 10));
+    
+//     return response()->json([
+//         'data' => $users->items(),
+//         'total' => $users->total(),
+//         'perPage' => $users->perPage(),
+//         'curentPage' => $users->curentPage(),
+
+//     ]);
+
+// }
+
+public function index(Request $request){
     // Nombre d'éléments par page
     $perPage = $request->query('perPage', 10); // Utilise 10 comme valeur par défaut si 'perPage' n'est pas spécifié
     $page = $request->query('page', 1); // Utilise 1 comme valeur par défaut si 'page' n'est pas spécifié

@@ -8,9 +8,57 @@ use App\Models\Transaction;
 use App\Models\Subscription;
 use App\Models\Ticket;
 use App\Models\Trajet;
+use App\Models\SubscriptionType;
 
 class TransactionController extends Controller
 {
+    // statistique du user connecte
+public function statistiquesUser(Request $request)
+{
+    try {
+        // Récupérer l'utilisateur authentifié
+        $user = auth()->user();
+
+        // Vérifier si l'utilisateur est authentifié
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        // Nombre de tickets liés à l'utilisateur
+        $nombreTickets = Ticket::where('user_id', $user->id)->count();
+
+        // Nombre d'abonnements liés à l'utilisateur
+        $nombreAbonnements = Subscription::where('user_id', $user->id)->count();
+
+        // Nombre de transactions liées à l'utilisateur
+        $nombreTransactions = Transaction::where('user_id', $user->id)->count();
+
+        // Montant total des transactions
+        $montantTotal = Transaction::where('user_id', $user->id)->sum('total_amount');
+
+         // Nombre de trajets
+        $nombreTrajets = Trajet::count();
+
+
+        // Nombree de types dabonnement
+        $nombreTypeAbonnements = SubscriptionType::count();
+
+        return response()->json([
+            'Bonjour' => $user->nom .' '.$user->prenom,
+            'nombre_tickets' => $nombreTickets,
+            'nombre_abonnements' => $nombreAbonnements,
+            'nombre_transactions' => $nombreTransactions,
+            'montant_total' => $montantTotal,
+            'nombreTrajets' => $nombreTrajets,
+            'nombreTypeAbonnements' => $nombreTypeAbonnements
+        ]);
+
+    } catch (\Exception $e) {
+        // Gérer les exceptions
+        return response()->json(['error' => 'Une erreur est survenue lors de la récupération des statistiques'], 500);
+    }
+}
+
     // Méthode pour lister les transactions de l'utilisateur
     // public function index()
     // {
@@ -101,8 +149,9 @@ class TransactionController extends Controller
         return response()->json($revenues);
     }
 
+    
     // Obtenir mes transactions et ses details
- public function checkUserTransactions(Request $request)
+ public function maConso(Request $request)
 {
     // Récupérer l'utilisateur authentifié
     $user = auth()->user();
@@ -136,6 +185,7 @@ class TransactionController extends Controller
         'message' => 'Vous n\'avez pas effectué de transactions.'
     ]);
 }
+
 
 // Fonction pour récupérer les détails spécifiques à une transaction
 private function getTransactionDetails($transaction)
@@ -205,5 +255,6 @@ private function getTransactionDetails($transaction)
         return response()->json(['error' => 'Une erreur est survenue lors de la récupération des détails de transaction'], 500);
     }
 }
+
 
 }

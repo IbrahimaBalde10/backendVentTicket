@@ -44,6 +44,91 @@ class TicketController extends Controller
         }
 
 
+// le user connecté verifie le statut de son ticket
+public function verifieStatutTicket(Request $request)
+{
+    // Récupérer l'utilisateur authentifié
+    $user = auth()->user();
+
+    // Construire le nom complet du client principal
+    // $nomCompletClient = $user->nom . ' ' . $user->prenom;
+    $nomCompletClient = $user->nom;
+
+
+    // Chercher le dernier ticket où le nom du client connecté correspond au nom dans le ticket
+    $ticket = Ticket::where('user_id', $user->id)
+                    ->where('nom', $nomCompletClient) // Assurer que le nom correspond à celui du client principal
+                    ->latest()
+                    ->first();
+
+                    // $ticket->nom = Auth::user()->nom.' '.Auth::user()->prenom;
+
+    // Si un ticket existe pour ce client principal
+    if ($ticket) {
+        // Mettre à jour le statut en fonction de la date d'expiration
+        $ticket->updateStatut();
+
+        return response()->json([
+            'Bonjour' => $user->nom,
+            'has_ticket' => true,
+            'id du ticket' => $ticket->id, 
+            'status' => $ticket->statut,
+            'expirationDate' => $ticket->expiration_date,
+            'qrCode' => $ticket->qr_code,
+            'nomClient' => $ticket->nom  // Nom sur le ticket (qui correspond à l'utilisateur principal)
+        ]);
+
+    } else {
+        return response()->json([
+            'Bonjour' => $user->nom,
+            'message' => "Vous n'avez pas de ticket à votre nom.",
+        ]);
+    }
+}
+
+// le user connecte recupere tous ses tickets actif
+public function recupereTicketValide(Request $request)
+{
+    // Récupérer l'utilisateur authentifié
+    $user = auth()->user();
+
+    // Chercher tous les tickets liés à l'utilisateur
+    $tickets = Ticket::where('user_id', $user->id)
+                     ->get();
+
+    // Mettre à jour le statut de chaque ticket
+    foreach ($tickets as $ticket) {
+        $ticket->updateStatut();
+    }
+
+    // Récupérer les tickets avec le statut "valide"
+    $activeTickets = $tickets->where('statut', 'valide');
+
+    // Vérifier s'il y a des tickets actifs
+    if ($activeTickets->isNotEmpty()) {
+        // Retourner les détails des tickets
+        return response()->json([
+            'Bonjour' => $user->nom,
+            'has_ticket' => true,
+            'tickets' => $activeTickets->map(function ($ticket) {
+                return [
+                    'id' => $ticket->id,
+                    'statut' => $ticket->statut,
+                    'expirationDate' => $ticket->expiration_date,
+                    'qrCode' => $ticket->qr_code,
+                    'nomClient' => $ticket->nom
+                ];
+            }),
+        ]);
+    } else {
+        return response()->json([
+            'Bonjour' => $user->nom,
+            'message' => "Vous n'avez pas de tickets actifs.",
+        ]);
+    }
+}
+
+// 
 
     // Dans votre contrôleur(teste seulement)
     public function showTicket($id)
@@ -78,12 +163,11 @@ public function create(Request $request)
             'trajet_id' => 'required|exists:trajets,id',
             'type' => 'required|in:aller_simple,aller_retour',
             'quantity' => 'required|integer|min:1',
-            'passengers' => 'required|array', // Liste des passagers additionnels
+            'passengers' => 'array', // Liste des passagers additionnels
             'passengers.*' => 'string', // Nom des passagers additionnels
             'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
             'date_depart' => 'required|date',
             'heure_depart' => 'required|date_format:H:i',
-    
         ]);
 
         // Récupération des informations sur le trajet et calcul du prix
@@ -129,8 +213,8 @@ public function create(Request $request)
             // Déterminer le nom du passager
             if ($i == 0) {
                 // Premier ticket : nom du client connecté
-                // $ticket->nom = Auth::user()->name;
-                $ticket->nom = Auth::user()->nom.' '.Auth::user()->prenom;
+                $ticket->nom = Auth::user()->nom;
+                // $ticket->nom = Auth::user()->nom.' '.Auth::user()->prenom;
             } else {
                 // Tickets suivants : noms des passagers additionnels
                 $passengers = $request->input('passengers', []);
@@ -142,7 +226,20 @@ public function create(Request $request)
             $ticket->purchase_date = now();
             $ticket->calculateExpirationDate($type); // Méthode personnalisée pour définir l'expiration
             $ticket->updateStatut(); // Méthode personnalisée pour définir le statut
+            // 
+            // Générer le contenu du QR code avec les informations du ticket
+            $qrCodeContent = "Ticket ID: " . $ticket->id . "\n";
+            $qrCodeContent .= "Date d'achat: " . $ticket->purchase_date . "\n";
+            $qrCodeContent .= "Date d'expiration: " . $ticket->expiration_date. "\n";
+            $qrCodeContent .= "Date d'expiration: " . $ticket->statut;
+                // Générer le QR code et le convertir en base64
+            $qrCode = QrCode::size(150)->generate($qrCodeContent);
+            $qrCodeBase64 = base64_encode($qrCode);
 
+                // Assigner le QR code encodé en base64 au modèle de ticket
+            $ticket->qr_code = $qrCodeBase64;
+                
+            // 
             // Sauvegarder le ticket
             $ticket->save();
 
@@ -151,7 +248,7 @@ public function create(Request $request)
                 'id' => $ticket->id,
                 'transaction_id' => $ticket->transaction_id,
                 'trajet_id' => $ticket->trajet_id,
-                'user_id' => $ticket->trajet_id,
+                'user_id' => Auth::user()->id,
                 'type' => $ticket->type,
                 'nom' => $ticket->nom,
                 'Tel du client principal' => Auth::user()->telephone,
@@ -185,23 +282,19 @@ public function create(Request $request)
 // fin de creation par un client
 
 // debut de creation de ticket par un vendeur
-  public function vendreTicket(Request $request)
+public function vendreTicket(Request $request)
 {
     $request->validate([
         'trajet_id' => 'required|exists:trajets,id',
         'type' => 'required|in:aller_simple,aller_retour',
         'quantity' => 'required|integer|min:1',
-        'passengers' => 'required|array',
+        'passengers' => 'array',
         'passengers.*' => 'string',
         'telephone' => 'required|string',
         'nom' => 'required|string',
         'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
         'date_depart' => 'required|date',
         'heure_depart' => 'required|date_format:H:i',
-        // 'dates_de_depart' => 'required|array',
-        // 'dates_de_depart.*' => 'required|date',
-        // 'heures_de_depart' => 'required|array',
-        // 'heures_de_depart.*' => 'required|date_format:H:i',
     ]);
 
     $telephoneClient = $request->telephone;
@@ -217,21 +310,17 @@ public function create(Request $request)
         $email = strtolower($nomClient) . '.' . $telephoneClient . '.' . Str::random(5) . '@temporaryemail.com';
 
         // Création d'un compte utilisateur avec un mot de passe prédéfini
-        $temporaryPassword = 'passer123';
+        $temporaryPassword = 'password';
         $user = User::create([
             'nom' => $nomClient,
-            'prenom' => $nomClient,
+            'prenom' => "",
             'telephone' => $telephoneClient,
             'email' => $email,
             'password' => Hash::make($temporaryPassword),
         ]);
 
         $accountCreated = true;
-
-        // Envoi d'un SMS au client avec les informations de connexion
-        // Remplacez cette ligne par le code réel pour envoyer un SMS
-        // SMS::send($telephoneClient, "Your account has been created. Email: " . $user->email . ", Password: " . $temporaryPassword);
-    }
+}
 
     $trajet = Trajet::findOrFail($request->trajet_id);
     $unitPrice = $trajet->prix;
@@ -276,6 +365,20 @@ public function create(Request $request)
         $ticket->purchase_date = now();
         $ticket->calculateExpirationDate($type);
         $ticket->updateStatut();
+        // 
+            // Générer le contenu du QR code avec les informations du ticket
+            $qrCodeContent = "Ticket ID: " . $ticket->id . "\n";
+            $qrCodeContent .= "Date d'achat: " . $ticket->purchase_date . "\n";
+            $qrCodeContent .= "Date d'expiration: " . $ticket->expiration_date. "\n";
+            $qrCodeContent .= "Date d'expiration: " . $ticket->statut;
+                // Générer le QR code et le convertir en base64
+            $qrCode = QrCode::size(150)->generate($qrCodeContent);
+            $qrCodeBase64 = base64_encode($qrCode);
+
+                // Assigner le QR code encodé en base64 au modèle de ticket
+            $ticket->qr_code = $qrCodeBase64;
+                
+            // 
         $ticket->save();
 
         $ticketsData[] = [

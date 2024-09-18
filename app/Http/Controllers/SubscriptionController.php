@@ -9,6 +9,9 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 
+use SimpleSoftwareIO\QrCode\Facades\QrCode; //test
+
+
 
 class SubscriptionController extends Controller
 {
@@ -81,7 +84,7 @@ class SubscriptionController extends Controller
 //     ]);
 // }
 
-//abonnement dun client 
+//acheter un abonnement  
 public function create(Request $request)
 {
     // Validation des données entrantes
@@ -121,16 +124,103 @@ public function create(Request $request)
     $subscription->start_date = now();
     $subscription->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
     $subscription->updateStatut(); // Mettre à jour le statut de l'abonnement
+    // Générer le contenu du QR code avec les informations du ticket
+    $qrCodeContent = "ID: " . $subscription->id . "\n";
+    $qrCodeContent .= "Date d'achat: " . $subscription->start_date . "\n";
+    $qrCodeContent .= "Date d'expiration: " . $subscription->end_date. "\n";
+    $qrCodeContent .= "Date d'expiration: " . $subscription->statut;
+    // Générer le QR code et le convertir en base64
+    $qrCode = QrCode::size(150)->generate($qrCodeContent);
+    $qrCodeBase64 = base64_encode($qrCode);
+
+    // Assigner le QR code encodé en base64 au modèle de ticket
+    $subscription->qr_code = $qrCodeBase64;
+         
     $subscription->save();
 
     return response()->json([
-        'message' => 'Subscription created successfully',
+        'message' => 'Abonnement cree avec succees',
         'subscription' => $subscription,
         'transaction' => $transaction,
         'Abonnement' => $subscriptionType->name
     ]);
 }
 
+// vendre un abonnement
+public function vendreAbonnement(Request $request)
+{
+    // Valider les données entrantes
+    $request->validate([
+        'subscription_type_id' => 'required|numeric|exists:subscription_types,id',
+        'telephone' => 'required|string',
+        'methodePaiement' =>  'required|in:espece,carte,mobile,en_ligne',
+    ]);
+
+    // Récupérer les données de la requête
+    $telephoneClient = $request->telephone;
+    $subscription_type_id = $request->subscription_type_id;
+    $methodePaiement = $request->methodePaiement;
+
+    // 1. Vérifier si l'utilisateur existe par son numéro de téléphone
+    $user = User::where('telephone', $telephoneClient)->first();
+    if (!$user) {
+        return response()->json(['error' => 'Cet utilisateur n\'existe pas!!!'], 404);
+    }
+
+    // 2. Vérifier si le type d'abonnement existe
+   $subscriptionType = SubscriptionType::where('id', $subscription_type_id)->first();
+    if (!$subscriptionType) {
+        return response()->json(['error' => 'Ce type d\'abonnement n\'existe pas!!!'], 404);
+    }
+
+
+
+    // Récupérer le prix de l'abonnement
+    $price = $subscriptionType->price;
+
+    // Récupérer l'utilisateur authentifié en tant que vendeur
+    $vendeur = auth()->user();
+
+    // 3. Créer une nouvelle transaction associée au vendeur
+    $transaction = new Transaction();
+    $transaction->user_id = $vendeur->id; // Vendeur connecté
+    $transaction->total_amount = $price;
+    $transaction->quantity = 1; // Un abonnement est unique
+    $transaction->price = $price;
+    $transaction->transaction_name = 'subscription';
+    $transaction->telephoneClient = $user->telephone; // Téléphone du client
+    $transaction->methodePaiement = $methodePaiement;
+    $transaction->save();
+
+      // 4. Créer l'abonnement correspondant
+    $subscription = new Subscription();
+    $subscription->user_id = $user->id;
+    $subscription->subscription_type_id = $subscriptionType->id;
+    $subscription->transaction_id = $transaction->id;
+    $subscription->start_date = now();
+    $subscription->calculateEndDate($subscriptionType->name); // Utilisation du nom du type d'abonnement
+    $subscription->updateStatut(); // Mettre à jour le statut de l'abonnement
+    // Générer le contenu du QR code avec les informations du ticket
+    $qrCodeContent = "ID: " . $subscription->id . "\n";
+    $qrCodeContent .= "Date d'achat: " . $subscription->start_date . "\n";
+    $qrCodeContent .= "Date d'expiration: " . $subscription->end_date. "\n";
+    $qrCodeContent .= "Statut: " . $subscription->statut;
+    // Générer le QR code et le convertir en base64
+    $qrCode = QrCode::size(150)->generate($qrCodeContent);
+    $qrCodeBase64 = base64_encode($qrCode);
+
+    // Assigner le QR code encodé en base64 au modèle de ticket
+    $subscription->qr_code = $qrCodeBase64;
+    $subscription->save();
+
+    // 5. Retourner la réponse avec les détails de l'abonnement et la transaction
+    return response()->json([
+        'message' => 'Abonnement créé avec succès.',
+        'subscription' => $subscription,
+        'transaction' => $transaction,
+        'Abonnement' => $subscriptionType->name
+    ]);
+} // fin
 
     // Méthode pour afficher les abonnements d'un utilisateur
     // public function index()
@@ -263,6 +353,7 @@ public function create(Request $request)
 //     ], 404);
 // }
 
+// statut de labonnement du user connecté
 public function checkSubscriptionStatus(Request $request)
 {
     // Récupérer l'utilisateur authentifié
@@ -406,6 +497,7 @@ public function verifierAbonnementClient(Request $request)
     $subscription = Subscription::where('user_id', $user->id)->latest()->first();
     if ($subscription) {
         // Vérifier l'état de l'abonnement
+         $subscription->updateStatut();
         if ($subscription->statut == 'valide') {
             return response()->json([
                 'message' => 'Son abonnement est encore valide.',

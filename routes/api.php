@@ -83,8 +83,14 @@ Route::middleware('auth:sanctum')->post('/tickets/create', [TicketController::cl
 // route pour créer des tickets et transactions concernés (vente)
 Route::middleware('auth:sanctum')->post('/tickets/vendreTicket', [TicketController::class, 'vendreTicket']);
 
+// route pour créer un abonnement et transactions concernés (vente)
+Route::middleware('auth:sanctum')->post('/subscriptions/vendreAbonnement', [SubscriptionController::class, 'vendreAbonnement']);
+// staistiqueUser
+Route::middleware('auth:sanctum')->get('/transactions/statistiquesUser', [TransactionController::class, 'statistiquesUser']);
+
+
 // verifier les transactions de user connecte
-Route::middleware('auth:sanctum')->get('/transactions/maConso', [TransactionController::class, 'checkUserTransactions']);
+Route::middleware('auth:sanctum')->get('/transactions/maConso', [TransactionController::class, 'maConso']);
 
 // routes pour gérer les transactions pour les comptables
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -118,7 +124,14 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 // route pour créer des abonnements et transactions concernés
 Route::middleware('auth:sanctum')->post('/subscriptions/create', [SubscriptionController::class, 'create']);
 
+// client connecté verifie le statut de son ticket 
+Route::middleware('auth:sanctum')->get('/tickets/status', [TicketController::class, 'verifieStatutTicket']);
 
+// client connecté recupere ses tickets Valide 
+Route::middleware('auth:sanctum')->get('/tickets/recupererTicketValide', [TicketController::class, 'recupereTicketValide']);
+
+// staistiqueUser
+Route::middleware('auth:sanctum')->get('/transactions/statistiquesUser', [TransactionController::class, 'statistiquesUser']);
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // afficher les tickets
@@ -143,6 +156,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('subscriptions/by-type', [SubscriptionController::class, 'getSubscriptionsByType']);
     Route::get('subscriptions/revenue-by-type', [SubscriptionController::class, 'getTotalRevenueByType']);
 });
+
 // verifier le statut d'abonnement du client connecté
 Route::middleware('auth:sanctum')->get('/subscriptions/status', [SubscriptionController::class, 'checkSubscriptionStatus']);
 
