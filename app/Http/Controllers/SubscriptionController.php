@@ -128,7 +128,7 @@ public function create(Request $request)
     $qrCodeContent = "ID: " . $subscription->id . "\n";
     $qrCodeContent .= "Date d'achat: " . $subscription->start_date . "\n";
     $qrCodeContent .= "Date d'expiration: " . $subscription->end_date. "\n";
-    $qrCodeContent .= "Date d'expiration: " . $subscription->statut;
+    $qrCodeContent .= "Statut: " . $subscription->statut;
     // Générer le QR code et le convertir en base64
     $qrCode = QrCode::size(150)->generate($qrCodeContent);
     $qrCodeBase64 = base64_encode($qrCode);

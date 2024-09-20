@@ -212,7 +212,7 @@ private function getTransactionDetails($transaction)
                     'ticket_type' => $ticket->type,
                     'status' => $ticket->statut,
                     // 'valid_until' => $ticket->valid_until,
-                    'qr_code' => $ticket->qr_code,
+                    // 'qr_code' => $ticket->qr_code,
                     'prix' => $prix, // Ajout du prix calculé
                     'trajet' => [
                         'nom' => $trajet->nom, // Nom du trajet
@@ -230,7 +230,7 @@ private function getTransactionDetails($transaction)
                 'subscription_type' => $subscription->subscriptionType->name,
                 'status' => $subscription->statut,
                 'end_date' => $subscription->end_date,
-                'qr_code' => $subscription->qr_code,
+                // 'qr_code' => $subscription->qr_code,
             ];
         }
     }
